@@ -1,4 +1,4 @@
-![image](NBC9.png)
+![image](/NBC9.png)
 NBC9
 * 내일배움캠프 과제 9번 - 숫자야구
 * 기능
