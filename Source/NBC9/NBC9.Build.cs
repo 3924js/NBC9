@@ -8,9 +8,16 @@ public class NBC9 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[] {
+			//기본 모듈
+			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
+			
+			//UI 관련 모듈
+			"UMG", "Slate", "SlateCore"});
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[] { });
+
+		PublicIncludePaths.AddRange(new string[] { "Game"});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
