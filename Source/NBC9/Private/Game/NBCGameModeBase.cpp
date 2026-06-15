@@ -21,6 +21,15 @@ void ANBCGameModeBase::BeginPlay()
 //입력 메세지 출력
 void ANBCGameModeBase::PrintMessage(ANBCPlayerController* Player, const FString& InputNumber)
 {
+	//입력횟수 소진시 거부
+	ANBCPlayerState* PlayerState = Player->GetPlayerState<ANBCPlayerState>();
+	if (IsValid(PlayerState) == true && PlayerState->CurrentTryCount >= PlayerState->MaxTryCount)
+	{
+		Player->ClientRPCPrintMessage(TEXT("No more attempts left."));
+		return;
+	}
+
+	//입력 검사
 	FString ChatMessageString = InputNumber;
 	int Index = InputNumber.Len() - 3;
 	FString GuessNumberString = InputNumber.RightChop(Index);
@@ -28,6 +37,8 @@ void ANBCGameModeBase::PrintMessage(ANBCPlayerController* Player, const FString&
 	{
 		FString CheckResultString = CheckResult(GuessNumberString);
 		IncreaseTryCount(Player);
+
+		//다른 플레이어에게 시도 내용 전파
 		for (TActorIterator<ANBCPlayerController> Iterator(GetWorld()); Iterator; ++Iterator)
 		{
 			ANBCPlayerController* PC = *Iterator;
@@ -44,14 +55,7 @@ void ANBCGameModeBase::PrintMessage(ANBCPlayerController* Player, const FString&
 	}
 	else
 	{
-		for (TActorIterator<ANBCPlayerController> Iterator(GetWorld()); Iterator; ++Iterator)
-		{
-			ANBCPlayerController* PC = *Iterator;
-			if (IsValid(PC) == true)
-			{
-				PC->ClientRPCPrintMessage(InputNumber);
-			}
-		}
+		Player->ClientRPCPrintMessage(TEXT("Invalid input. Please enter 3 unique digits from 1 to 9."));
 	}
 }
 
@@ -136,6 +140,12 @@ bool ANBCGameModeBase::IsInputValid(const FString& InNumberString)
 		for (TCHAR C : InNumberString)
 		{
 			if (FChar::IsDigit(C) == false || C == '0')
+			{
+				bIsUnique = false;
+				break;
+			}
+
+			if (UniqueDigits.Contains(C) == true)
 			{
 				bIsUnique = false;
 				break;
