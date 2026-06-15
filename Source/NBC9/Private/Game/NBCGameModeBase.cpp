@@ -4,7 +4,6 @@
 #include "Game/NBCGameModeBase.h"
 #include "Game/NBCGameStateBase.h"
 #include "GameFramework/PlayerState.h"
-#include "Player/NBCPawn.h"
 #include "Player/NBCPlayerState.h"
 #include "Player/NBCPlayerController.h"
 #include "EngineUtils.h"
@@ -15,7 +14,6 @@ void ANBCGameModeBase::BeginPlay()
 
 	//랜덤 목표 숫자 생성
 	TargetNumber = CreateTargetNumber();
-	UE_LOG(LogTemp, Warning, TEXT("TargetNum - %s"), *TargetNumber);
 }
 
 //입력 메세지 출력
@@ -46,12 +44,11 @@ void ANBCGameModeBase::PrintMessage(ANBCPlayerController* Player, const FString&
 			{
 				FString CombinedMessageString = InputNumber + TEXT(" -> ") + CheckResultString;
 				PC->ClientRPCPrintMessage(CombinedMessageString);
-
-				//스트라이크 갯수로 게임오버 확인
-				int32 StrikeCount = FCString::Atoi(*CheckResultString.Left(1));
-				CheckGameOver(Player, StrikeCount);
 			}
 		}
+		//스트라이크 갯수로 게임오버 확인
+		int32 StrikeCount = FCString::Atoi(*CheckResultString.Left(1));
+		CheckGameOver(Player, StrikeCount);
 	}
 	else
 	{
@@ -105,7 +102,7 @@ FString ANBCGameModeBase::CreateTargetNumber()
 	{
 		Numbers.Add(i);
 	}
-
+	
 	FMath::RandInit(FDateTime::Now().GetTicks());
 	Numbers = Numbers.FilterByPredicate([](int32 Num) { return Num > 0; });
 
@@ -118,6 +115,7 @@ FString ANBCGameModeBase::CreateTargetNumber()
 		Numbers.RemoveAt(Index);
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("TargetNum - %s"), *Result);
 	return Result;
 }
 
@@ -200,7 +198,7 @@ FString ANBCGameModeBase::CheckResult(const FString& InputNumber)
 	return FString::Printf(TEXT("%dS%dB"), StrikeCount, BallCount);
 }
 
-
+//게임 초기화
 void ANBCGameModeBase::ResetGame()
 {
 	TargetNumber = CreateTargetNumber();
@@ -212,11 +210,18 @@ void ANBCGameModeBase::ResetGame()
 		{
 			PS->CurrentTryCount = 0;
 		}
+
+		if (IsValid(PC) == true)
+		{
+			PC->ClientRPCPrintMessage(TEXT("Game is restarting. A new target number has been generated."));
+		}
 	}
 }
 
+//게임 끝났는지 확인
 void ANBCGameModeBase::CheckGameOver(ANBCPlayerController* Player, int StrikeCount)
 {
+	//숫자 다 맞췄을 때
 	if (StrikeCount >= 3)
 	{
 		ANBCPlayerState* PS = Player->GetPlayerState<ANBCPlayerState>();
@@ -226,11 +231,12 @@ void ANBCGameModeBase::CheckGameOver(ANBCPlayerController* Player, int StrikeCou
 			{
 				FString CombinedMessage = PS->PlayerName + TEXT(" has won the game!");
 				PC->NotificationText = FText::FromString(CombinedMessage);
-
-				ResetGame();
 			}
 		}
+
+		ResetGame();
 	}
+	//숫자 다 못맞췄을 때
 	else
 	{
 		bool bIsDraw = true;
@@ -252,9 +258,9 @@ void ANBCGameModeBase::CheckGameOver(ANBCPlayerController* Player, int StrikeCou
 			for (const auto& PC : Controllers)
 			{
 				PC->NotificationText = FText::FromString(TEXT("Draw!"));
-
-				ResetGame();
 			}
+
+			ResetGame();
 		}
 	}
 }

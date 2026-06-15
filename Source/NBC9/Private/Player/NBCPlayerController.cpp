@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// NBCPlayerController.cpp
 
 
 #include "Player/NBCPlayerController.h"
@@ -76,6 +76,12 @@ void ANBCPlayerController::SetChatMessage(const FString& InputMessage)
 //체팅 메세지 출력
 void ANBCPlayerController::PrintMessage(const FString& InputMessage)
 {
+	if (IsLocalController() == true && IsValid(ChatInputInstance) == true)
+	{
+		ChatInputInstance->AddChatMessage(InputMessage);
+		return;
+	}
+
 	NBCUtilLibrary::PrintString(this, InputMessage, 10.f);
 }
 
